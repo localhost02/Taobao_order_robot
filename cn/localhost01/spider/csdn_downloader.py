@@ -43,8 +43,9 @@ class CsdnDownloader:
 
         # 2.判断是否需要登录
         try:
-            driver.find_element_by_xpath("//*[@id='download_top']/div[4]/a[3 and text()='立即下载']")  # 未登录
+            driver.find_element_by_xpath("//*[@id='download_top']/div[4]/a[2 and text()='立即下载']")  # 未登录
             self.__login()
+            time.sleep(2)
         except exceptions.NoSuchElementException:  # 已登录
             pass
 
@@ -55,8 +56,12 @@ class CsdnDownloader:
         while count < 3:
             count += 1
             # 3.下载
+            vip_download_a = driver.find_element_by_class_name("direct_download")
+            vip_download_a.click()
+
             download_url = driver.find_element_by_id("vip_btn").get_attribute("href")
             source = self.__session.get(download_url, stream=True)
+
             # 3.1获取下载名
             filename = re.findall(r".*\"(.*)\"$", source.headers.get("Content-Disposition", "\"None\""))[0]
             if filename == "None":
@@ -75,13 +80,18 @@ class CsdnDownloader:
         return None
 
     def __login(self):
-        vip_download_a = driver.find_element_by_xpath("//div[@id='download_top']/div[4]/a[3]")
+        vip_download_a = driver.find_element_by_class_name("direct_download")
         vip_download_a.click()
         time.sleep(2)
+
         # 1.切换到登录iframe
         form_iframe = driver.find_element_by_xpath("//*[@id='loginWrap']/iframe")
         driver.switch_to_frame(form_iframe)
         # 2.进行登录
+        change_login_button = driver.find_element_by_class_name("login-user__active")
+        change_login_button.click()
+        time.sleep(2)
+
         username_input = driver.find_element_by_id("username")
         username_input.send_keys(self.__username)
         password_input = driver.find_element_by_id("password")
@@ -102,7 +112,9 @@ class CsdnDownloader:
 if __name__ == '__main__':
     count = 0
     while True:
-        count += 1
-        down_loader = CsdnDownloader('csdn_vip账号', '登录密码')
+        down_loader = CsdnDownloader('localhost01', '197347Rcl**')
         local_path = down_loader.download('http://download.csdn.net/download/lqkitten/10113904', "c://Robot_Download/")
-        print_msg("下载完成，本地路径：" + local_path + "__" + count)
+        if local_path is not None:
+            print_msg("下载完成，本地路径：" + local_path + "，重试次数：" + str(count))
+            break
+        count += 1

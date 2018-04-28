@@ -9,7 +9,7 @@ mail_username = "邮箱登录账号"
 mail_password = "邮箱登录密码"
 # 邮箱独立密码（浏览器发送才需配置，如果没有独立密码请配置为""）
 mail_password2 = "邮箱独立密码"
-# 邮箱授权码（非浏览器发送才需配置）
+# 邮箱授权码
 mail_authorization_code = "邮箱授权码"
 
 # 邮件提醒-接收账号
