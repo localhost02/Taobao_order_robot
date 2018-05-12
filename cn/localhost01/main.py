@@ -1,19 +1,37 @@
 # -*- coding: utf-8 -*-
 import time
+from selenium import webdriver
+from selenium.webdriver import ActionChains
+
 from util.str_util import print_msg, send_mail
 from spider.taobao_climber import TaobaoClimber
 from spider.csdn_downloader import CsdnDownloader
+from mail.mail_sender_browser import MailSenderBrowser
 from mail.mail_sender import *
-from mail.mail_sender_browser import *
 from __init__ import *
 
 if __name__ == '__main__':
-
-    # 1.初始化需要的对象
+    # 1.给相关对象传入账号密码
     climber = TaobaoClimber(taobao_username, taobao_password)
     downloader = CsdnDownloader(csdn_username, csdn_password)
     sender = MailSender(mail_username, mail_authorization_code)
     sender_browser = MailSenderBrowser(mail_username, mail_password, mail_password2)
+
+    # 2.实例化driver
+    driver = webdriver.Firefox()  # 应将浏览器驱动放于python根目录下，且python已配置path环境变量
+    action = ActionChains(driver)
+    driver.maximize_window()  # 浏览器最大化
+    driver.set_page_load_timeout(delay_wait)  # 设定页面加载限制时间
+
+    TaobaoClimber.driver = CsdnDownloader.driver = MailSenderBrowser.driver = driver
+    TaobaoClimber.action = CsdnDownloader.action = MailSenderBrowser.action = action
+
+    # 3.建立标签页
+    ## 默认淘宝标签页
+    ## 新建csdn标签页
+    driver.execute_script("window.open('')")
+    ## 新建邮箱标签页
+    driver.execute_script("window.open('')")
 
     # 正则：解析留言内容
     re_note = re.compile(
@@ -79,8 +97,9 @@ if __name__ == '__main__':
                     continue
             else:
                 ret = sender_browser.send(user_to, local_path)
+
                 if ret is None:
-                    print_msg("【邮件-浏览器-附件发送成功】")
+                    print_msg("【浏览器方式：邮件发送成功】")
                 else:  # 发送失败
                     send_mail(sender, message_send_mail_error, order[0], ret)
                     continue
