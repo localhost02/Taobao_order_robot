@@ -3,7 +3,6 @@ from selenium.common import exceptions
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 import time
-import random
 import re
 import requests
 import json
@@ -33,26 +32,26 @@ class TaobaoClimber:
     # 登录密码
     __password = ""
     # 登陆URL
-    __login_path = "https://login.taobao.com/member/login.jhtml"
+    __login_url = "https://login.taobao.com/member/login.jhtml"
     # 卖家待发货订单URL
-    __orders_path = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend"
+    __orders_url = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend"
     # 卖家正出售宝贝URL
-    __auction_path = "https://sell.taobao.com/auction/merchandise/auction_list.htm"
+    __auction_url = "https://sell.taobao.com/auction/merchandise/auction_list.htm"
     # 卖家仓库中宝贝URL
-    __repository_path = "https://sell.taobao.com/auction/merchandise/auction_list.htm?type=1"
+    __repository_url = "https://sell.taobao.com/auction/merchandise/auction_list.htm?type=1"
     # 卖家确认发货URL
-    __deliver_path = "https://wuliu.taobao.com/user/consign.htm?trade_id="
+    __deliver_url = "https://wuliu.taobao.com/user/consign.htm?trade_id="
     # 卖家退款URL
-    __refunding_path = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=REFUNDING&tabCode=refunding"
+    __refunding_url = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=REFUNDING&tabCode=refunding"
     # 请求留言URL
-    __message_path = "https://trade.taobao.com/trade/json/getMessage.htm?archive=false&biz_order_id="
+    __message_url = "https://trade.taobao.com/trade/json/getMessage.htm?archive=false&biz_order_id="
     # requests会话
     __session = None
 
     def __login(self):
         # 1.登陆
         try:
-            self.driver.get(self.__login_path)
+            self.driver.get(self.__login_url)
         except exceptions.TimeoutException:  # 当页面加载时间超过设定时间，JS来停止加载
             self.driver.execute_script('window.stop()')
 
@@ -87,30 +86,11 @@ class TaobaoClimber:
         password_input = self.driver.find_element_by_id("TPL_password_1")
         # 3.为账户、密码赋值
         username_input.clear()
-        # 随机点击，防止淘宝判断机器人操作而出现滑块验证
-        self.action.move_by_offset(random.randint(10, 60), random.randint(10, 90)).perform()
         username_input.send_keys(self.__username)
-        # 随机点击，防止淘宝判断机器人操作而出现滑块验证
-        self.action.move_by_offset(random.randint(10, 60), random.randint(10, 90)).perform()
         password_input.send_keys(self.__password)
-        # 4.取得滑块所在div，判断是否display 一般首次登陆不需要滑块验证
-        slide_div = self.driver.find_element_by_id("nocaptcha")
-        if slide_div.is_displayed() is True:
-            retry = 0
-            while retry < 5:
-                retry += 1
-                slide_span = self.driver.find_element_by_id("nc_1_n1z")  # 取得滑块span
-                self.action.click_and_hold(slide_span)  # 鼠标左键按住span
-                self.action.move_by_offset(257, 0)  # 向右拖动258像素完成验证
-                self.action.perform()
-                time.sleep(1)
-                self.action.reset_actions()  # 页面进行了刷新，需要清除action之前存储的elements
-                try:
-                    slide_refresh = self.driver.find_element_by_xpath(
-                        "//div[@id='nocaptcha']/div/span/a")  # 页面没有滑块，而是“点击刷新再来一次”
-                    slide_refresh.click()
-                except exceptions.NoSuchElementException:  # 滑动成功
-                    break
+
+        # 4.滑块判断
+        self.__slide_login()
 
         # 5.获取登陆按钮，并点击登录
         submit_btn = self.driver.find_element_by_id("J_SubmitStatic")
@@ -131,6 +111,21 @@ class TaobaoClimber:
 
         return True
 
+    def __slide_login(self):
+        # 取得滑块所在div，判断是否display 一般首次登陆不需要滑块验证
+        slide_div = self.driver.find_element_by_id("nocaptcha")
+        if slide_div.is_displayed() is True:
+            self.driver.execute_script(
+                "document.getElementById('J_Message').children[1].innerText='发货机器人：请滑动滑块，协助完成验证！';")
+            while True:
+                try:
+                    text = self.driver.find_element_by_id("nc_1__scale_text").text
+                    if text == '验证通过':
+                        break
+                    time.sleep(0.5)
+                except exceptions.NoSuchElementException:  # 此时处于刷新按钮状态
+                    pass
+
     def __get_orders_page(self):
         # 1.bs4将资源转html
         html = BeautifulSoup(self.driver.page_source, "html5lib")
@@ -144,12 +139,16 @@ class TaobaoClimber:
                                         attrs={"data-reactid": re.compile(r"\.0\.5\.3:.+\.0\.1\.0\.0\.0\.6")}).text
             order_buyer = order_div.find("a", attrs={"class": "buyer-mod__name___S9vit"}).text
             # 4.根据订单id组合url，请求订单对应留言
-            order_message = json.loads(self.__session.get(self.__message_path + order_id).text)['tip']
+            order_message = json.loads(self.__session.get(self.__message_url + order_id).text)['tip']
             data_array.append((order_id, order_date, order_buyer, order_message))
         return data_array
 
     def climb(self):
-        # 切换回窗口
+        # FIXME 没有真实订单的模拟测试，生产环境注释即可
+        #order_test = [("Test_1548615412315", "2018-08-07 15:00:03", "疯狂的石头",u"留言: test@qq.com  http://download.csdn.net/download/lqkitten/10113904")]
+        #return order_test
+
+        # 切换回淘宝窗口
         self.driver.switch_to_window(self.driver.window_handles[0])
 
         result = []
@@ -161,7 +160,7 @@ class TaobaoClimber:
                 self.__is_logined = True
 
         # 1.进入待发货订单页面
-        self.driver.get(self.__orders_path)
+        self.driver.get(self.__orders_url)
         while True:
             # 2.获取当前页面的订单信息
             time.sleep(2)  # 两秒等待页面加载
@@ -172,10 +171,10 @@ class TaobaoClimber:
                 next_page_li = self.driver.find_element_by_class_name("pagination-next")
                 # 4.判断按钮是否可点击，否则退出循环
                 next_page_li.get_attribute("class").index("pagination-disabled")
-                # print_msg("到达最后一页")
+                # 到达最后一页
                 break
             except ValueError:
-                # print_msg("跳转到下一页")
+                # 跳转到下一页
                 print(next_page_li.find_element_by_tag_name("a").text)
                 next_page_li.click()
                 time.sleep(1)
@@ -184,7 +183,7 @@ class TaobaoClimber:
         return result
 
     def unshelve(self):
-        # 切换回窗口
+        # 切换回淘宝窗口
         self.driver.switch_to_window(self.driver.window_handles[0])
 
         if self.__is_logined is False:
@@ -195,7 +194,7 @@ class TaobaoClimber:
 
         try:
             # 1.进入正出售宝贝页面
-            self.driver.get(self.__auction_path)
+            self.driver.get(self.__auction_url)
             # 2.点击下架
             choose_checkbox = self.driver.find_element_by_xpath(
                 "//*[@id='J_DataTable']/table/tbody[1]/tr[1]/td/input[1]")
@@ -208,7 +207,7 @@ class TaobaoClimber:
             return False
 
     def shelve(self):
-        # 切换回窗口
+        # 切换回淘宝窗口
         try:
             self.driver.switch_to_window(self.driver.window_handles[0])
         except exceptions:
@@ -221,18 +220,19 @@ class TaobaoClimber:
                 self.__is_logined = True
 
         # 1.进入仓库宝贝页面
-        self.driver.get(self.__repository_path)
+        self.driver.get(self.__repository_url)
         # 2.点击上架
         try:
             choose_checkbox = self.driver.find_element_by_xpath("//*[@id='J_DataTable']/table/tbody[1]/tr[1]/td/input")
             choose_checkbox.click()
-            shelve_btn = self.driver.find_element_by_xpath("//*[@id='J_DataTable']/div[3]/table/tbody/tr/td/div/button[2]")
+            shelve_btn = self.driver.find_element_by_xpath(
+                "//*[@id='J_DataTable']/div[3]/table/tbody/tr/td/div/button[2]")
             shelve_btn.click()
         except exceptions.NoSuchElementException:
             pass
 
     def delivered(self, orderId):
-        # 切换回窗口
+        # 切换回淘宝窗口
         self.driver.switch_to_window(self.driver.window_handles[0])
 
         if self.__is_logined is False:
@@ -242,7 +242,7 @@ class TaobaoClimber:
                 self.__is_logined = True
         try:
             # 1.进入确认发货页面
-            self.driver.get(self.__deliver_path + orderId)
+            self.driver.get(self.__deliver_url + orderId)
             no_need_logistics_a = self.driver.find_element_by_xpath("//*[@id='dummyTab']/a")
             no_need_logistics_a.click()
             self.driver.find_element_by_id("logis:noLogis").click()
@@ -252,7 +252,7 @@ class TaobaoClimber:
             return False
 
     def exists_refunding(self):
-        # 切换回窗口
+        # 切换回淘宝窗口
         self.driver.switch_to_window(self.driver.window_handles[0])
 
         if self.__is_logined is False:
@@ -262,7 +262,7 @@ class TaobaoClimber:
                 self.__is_logined = True
         try:
             # 1.进入退款页面
-            self.driver.get(self.__refunding_path)
+            self.driver.get(self.__refunding_url)
             self.driver.find_element_by_class_name("item-mod__trade-order___2LnGB trade-order-main")
             return True
         except exceptions.NoSuchElementException:
@@ -275,13 +275,12 @@ if __name__ == '__main__':
     TaobaoClimber.action = ActionChains(TaobaoClimber.driver)
     TaobaoClimber.driver.maximize_window()  # 浏览器最大化
     TaobaoClimber.driver.execute_script("window.open('')")
-    TaobaoClimber.driver.execute_script("window.open('')")
 
-    climber = TaobaoClimber(u"淘宝账户", "登录密码")
+    climber = TaobaoClimber(u"", "")
     while True:
         # 循环爬取订单
         orders = climber.climb()
         for order in orders:
-            print_msg("订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order)
+            print_msg("淘宝订单产生：订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order)
         # 每30秒抓一次
         time.sleep(30)

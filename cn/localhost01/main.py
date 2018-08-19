@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 import time
+
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 
-from util.str_util import print_msg, send_mail
-from spider.taobao_climber import TaobaoClimber
-from spider.csdn_downloader import CsdnDownloader
-from mail.mail_sender_browser import MailSenderBrowser
-from mail.mail_sender import *
 from __init__ import *
+from cn.localhost01.csdn.csdn_downloader import CsdnDownloader
+from mail.mail_message import *
+from mail.mail_sender import *
+from mail.mail_sender_browser import MailSenderBrowser
+from taobao.taobao_climber import TaobaoClimber
+from util.str_util import print_msg, send_mail
 
 if __name__ == '__main__':
     # 1.给相关对象传入账号密码
@@ -26,16 +28,13 @@ if __name__ == '__main__':
     TaobaoClimber.driver = CsdnDownloader.driver = MailSenderBrowser.driver = driver
     TaobaoClimber.action = CsdnDownloader.action = MailSenderBrowser.action = action
 
-    # 3.建立标签页
-    ## 默认淘宝标签页
-    ## 新建csdn标签页
-    driver.execute_script("window.open('')")
-    ## 新建邮箱标签页
-    driver.execute_script("window.open('')")
+    # 3.建立邮箱标签页
+    if mail_send_type == 2:
+        driver.execute_script("window.open('')")
 
     # 正则：解析留言内容
     re_note = re.compile(
-        ur"^留言:\s*([\w.-]+@[\w.-]+\.\w+)[\s\S]+?((?:https?://)?[-A-Za-z0-9+&@#/%?=~_|!,.;]+[-A-Za-z0-9+&@#/%=~_|])\s*$")
+        ur"留言:\s*([\w.-]+@[\w.-]+\.\w+)\s+((?:https?://)?[-A-Za-z0-9+&@#/%?=~_|!,.;]+)\s*")
     # 休眠总时间
     sleep_total_time = 0
     # 存在未留言订单
@@ -57,11 +56,10 @@ if __name__ == '__main__':
 
             note_array = re.findall(re_note, order[3])
             if len(note_array) != 1:
-                if mail_notice_for_no_note:
-                    exists_no_note_order = True
+                exists_no_note_order = True
                 continue
 
-            order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
+            order_info = "【淘宝】已产生可操作订单：订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
             print_msg(order_info)
 
             user_to = note_array[0][0]
@@ -73,7 +71,7 @@ if __name__ == '__main__':
                 send_mail(sender, message_download_false, order[0])
                 continue
             else:
-                print_msg("【资源下载成功】本地路径：" + local_path)
+                print_msg("【CSDN】" + user_to + "的文件下载成功，本地路径：" + local_path)
             orders_len -= 1
 
             # 2.4进行下架判断
@@ -85,13 +83,13 @@ if __name__ == '__main__':
             if mail_send_type == 0:
                 download_url = server_file_url + os.path.basename(local_path)
                 if sender.send(Mail(user_to, download_url)):
-                    print_msg("【邮件发送成功】")
+                    print_msg("【邮件】" + user_to + "的邮件发送成功")
                 else:
                     send_mail(sender, message_send_false, order[0])
                     continue
             elif mail_send_type == 1:
                 if sender.send(Mail(user_to, local_path, 2)):
-                    print_msg("【邮件发送成功】")
+                    print_msg("【邮件】" + user_to + "的邮件发送成功")
                 else:
                     send_mail(sender, message_send_false, order[0])
                     continue
@@ -99,7 +97,7 @@ if __name__ == '__main__':
                 ret = sender_browser.send(user_to, local_path)
 
                 if ret is None:
-                    print_msg("【浏览器方式：邮件发送成功】")
+                    print_msg("【邮件-浏览器】" + user_to + "的邮件发送成功")
                 else:  # 发送失败
                     send_mail(sender, message_send_mail_error, order[0], ret)
                     continue

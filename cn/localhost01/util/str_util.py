@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from cn.localhost01.mail.mail_sender import Mail
-from cn.localhost01.__init__ import master_mail
+from cn.localhost01.__init__ import master_mail, is_mail_notice
 import chardet
 import sys
 
@@ -12,6 +12,9 @@ if len(sys.argv) == 2:
 
 
 def send_mail(sender, model, insert=None, insert2=None):
+    if not is_mail_notice:
+        return
+
     if insert is None:
         sender.send(Mail(master_mail, model, 0))
     elif insert2 is None:

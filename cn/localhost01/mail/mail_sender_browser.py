@@ -5,7 +5,6 @@ from selenium.webdriver import ActionChains
 import time
 import sys
 import os
-import random
 from cn.localhost01.util.str_util import print_msg
 
 reload(sys)
@@ -66,7 +65,7 @@ class MailSenderBrowser:
         try:
             password2_input = self.driver.find_element_by_id("pp")
             if self.__password2 is "":
-                print_msg("邮箱登录失败，请在__init__.py中配置邮箱独立密码！")
+                print_msg("【邮件】邮箱登录失败，请在__init__.py中配置邮箱独立密码！")
                 return False
             password2_input.send_keys(self.__password2)
             self.driver.find_element_by_id("btlogin").submit()
@@ -81,7 +80,7 @@ class MailSenderBrowser:
 
     def send(self, user_to, local_path):
         # 切换回窗口
-        self.driver.switch_to_window(self.driver.window_handles[2])
+        self.driver.switch_to_window(self.driver.window_handles[1])
 
         if self.__is_logined is False:
             count = 0
@@ -157,7 +156,6 @@ if __name__ == "__main__":
     MailSenderBrowser.action = ActionChains(MailSenderBrowser.driver)
     MailSenderBrowser.driver.maximize_window()  # 浏览器最大化
     MailSenderBrowser.driver.execute_script("window.open('')")
-    MailSenderBrowser.driver.execute_script("window.open('')")
 
-    sender_browser = MailSenderBrowser("QQ邮箱账号", "登录密码", "授权码")
-    sender_browser.send("接收邮箱", r"C:\Robot_Download\新建文本文档.txt")
+    sender_browser = MailSenderBrowser("test@qq.com", "123456", "111111")
+    sender_browser.send("test02@qq.com", r"C:\Robot_Download\openssh-7.6.rpm.tar")

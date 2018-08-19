@@ -32,7 +32,6 @@ class MailSender:
         body_mail = MIMEMultipart()
 
         # 构造显示内容并添加到邮件主体
-        text_mail = None
         if mail.mode == 0:
             text_mail = MIMEText(mail.text, _charset="utf-8")
         elif mail.mode == 1:
@@ -110,5 +109,5 @@ class Mail:
 
 if __name__ == "__main__":
     # 发送邮件
-    mail_sender = MailSender("邮箱账号", "授权码")
-    mail_sender.send(Mail("接收邮箱", "c://Robot_Download/大话Oracle_RAC：集群、高可用性、备份与恢复.pdf", 2))
+    mail_sender = MailSender("test@qq.com", "123456")
+    mail_sender.send(Mail("test02@qq.com", "c://Robot_Download/大话Oracle_RAC：集群、高可用性、备份与恢复.pdf", 2))
