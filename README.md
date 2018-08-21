@@ -39,7 +39,7 @@ pip install selenium
 pip install chardet
 ```
 ```bash
-pip install qiniu    #  如果需要通过七牛云上传文件方式
+pip install qiniu    # 如果需要通过七牛云上传文件方式
 ```
 
 ## 4、可能问题
