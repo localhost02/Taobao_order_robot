@@ -2,6 +2,8 @@
 **帮你实现：淘宝虚拟商品的`自动值守`、`资源下载`、`Email发货`**
 
 ## 1、运作流程
+<img src="https://p27z4ahy7.bkt.clouddn.com/2018/08/19/2e3aba61a8652cac683c3e12b4694c31.png" height="80%" />
+
 ![流程图](http://p27z4ahy7.bkt.clouddn.com/2018/08/19/2e3aba61a8652cac683c3e12b4694c31.png)
 
 **Trip：**
