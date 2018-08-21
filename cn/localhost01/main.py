@@ -3,7 +3,7 @@ import time
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
-
+from util.qiniuUtil import *
 from __init__ import *
 from cn.localhost01.csdn.csdn_downloader import CsdnDownloader
 from mail.mail_message import *
@@ -81,8 +81,8 @@ if __name__ == '__main__':
 
             # 2.5 发送邮件
             if mail_send_type == 0:
-                download_url = server_file_url + os.path.basename(local_path)
-                if sender.send(Mail(user_to, download_url)):
+                download_url_text = server_file_url + os.path.basename(local_path)
+                if sender.send(Mail(user_to, download_url_text)):
                     print_msg("【邮件】" + user_to + "的邮件发送成功")
                 else:
                     send_mail(sender, message_send_false, order[0])
@@ -93,13 +93,20 @@ if __name__ == '__main__':
                 else:
                     send_mail(sender, message_send_false, order[0])
                     continue
-            else:
+            elif mail_send_type == 2:
                 ret = sender_browser.send(user_to, local_path)
 
                 if ret is None:
                     print_msg("【邮件-浏览器】" + user_to + "的邮件发送成功")
                 else:  # 发送失败
                     send_mail(sender, message_send_mail_error, order[0], ret)
+                    continue
+            else:
+                download_url_text = upload_file(local_path)
+                if sender.send(Mail(user_to, download_url_text)):
+                    print_msg("【七牛】" + user_to + "的邮件发送成功")
+                else:
+                    send_mail(sender, message_send_false, order[0])
                     continue
 
             # 2.6 订单改为已发货

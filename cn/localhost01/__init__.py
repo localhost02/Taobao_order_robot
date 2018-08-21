@@ -7,6 +7,12 @@ taobao_password = ""
 csdn_username = ""
 csdn_password = ""
 
+# 七牛授权
+qiniu_ak = ""
+qiniu_sk = ""
+qiniu_bucket = "csdn-data"
+qiniu_domain = "http://example.com"
+
 # 邮箱账号
 mail_username = ""
 # 邮箱登录密码（可选，mail_send_type=2有效）

@@ -99,15 +99,19 @@ class TaobaoClimber:
         try:
             message = self.driver.find_element_by_id("J_Message").find_element_by_class_name("error")
             if message.text == u"为了你的账户安全，请拖动滑块完成验证":
+                self.driver.execute_script(
+                    "document.getElementById('J_Message').children[1].innerText='发货机器人：请滑动滑块，协助完成验证！';")
                 return False
         except exceptions.NoSuchElementException:
             pass
 
         # 7.有时检测当前环境是否异常，此时休眠一段时间让它检测
-        try:
-            self.driver.find_element_by_id("layout-center")
-        except exceptions.NoSuchElementException:
-            time.sleep(9)
+        while True:
+            try:
+                self.driver.find_element_by_id("J_SiteNav")
+                break
+            except exceptions.NoSuchElementException:
+                time.sleep(1)
 
         return True
 
@@ -145,8 +149,9 @@ class TaobaoClimber:
 
     def climb(self):
         # FIXME 没有真实订单的模拟测试，生产环境注释即可
-        #order_test = [("Test_1548615412315", "2018-08-07 15:00:03", "疯狂的石头",u"留言: test@qq.com  http://download.csdn.net/download/lqkitten/10113904")]
-        #return order_test
+        # order_test = [("Test_1548615412315", "2018-08-07 15:00:03", "疯狂的石头",
+                       u"留言: test@qq.com  http://download.csdn.net/download/lqkitten/10113904")]
+        # return order_test
 
         # 切换回淘宝窗口
         self.driver.switch_to_window(self.driver.window_handles[0])
@@ -276,7 +281,7 @@ if __name__ == '__main__':
     TaobaoClimber.driver.maximize_window()  # 浏览器最大化
     TaobaoClimber.driver.execute_script("window.open('')")
 
-    climber = TaobaoClimber(u"", "")
+    climber = TaobaoClimber(u"test", "123456")
     while True:
         # 循环爬取订单
         orders = climber.climb()
