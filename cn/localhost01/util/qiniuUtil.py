@@ -16,5 +16,5 @@ def upload_file(local_path):
     ret, info = put_file(token, new_file_name, local_path)
 
     if info.status_code == 200:
-        return qiniu_domain + "/" + new_file_name
+        return qiniu_domain + "/" + new_file_name + "?attname="
     return None
