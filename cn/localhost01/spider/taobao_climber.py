@@ -20,8 +20,8 @@ sys.setdefaultencoding('utf8')
 class TaobaoClimber:
     def __init__(self, username, password):
         self.__session = requests.Session()
-        self.username = username
-        self.password = password
+        self.__username = username
+        self.__password = password
 
     driver = None
     action = None
@@ -51,11 +51,11 @@ class TaobaoClimber:
         self.driver.maximize_window()
         self.driver.find_element_by_xpath("//li[@data-status='show_login']").click()
 
-        for usname in self.username:
-            self.driver.find_element_by_id("J-input-user").send_keys(usname)
+        for username_ in self.__username:
+            self.driver.find_element_by_id("J-input-user").send_keys(username_)
             time.sleep(0.2)
-        for pwd in self.password:
-            self.driver.find_element_by_id("password_rsainput").send_keys(pwd)
+        for password_ in self.__password:
+            self.driver.find_element_by_id("password_rsainput").send_keys(password_)
             time.sleep(0.2)
         # time.sleep(10)
         time.sleep(1)
