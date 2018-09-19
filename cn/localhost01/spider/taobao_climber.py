@@ -19,7 +19,7 @@ sys.setdefaultencoding('utf8')
 
 class TaobaoClimber:
     def __init__(self, username, password):
-        self.__username = username
+        self.__session = requests.Session()
         self.__username = username
         self.__password = password
 
@@ -31,8 +31,6 @@ class TaobaoClimber:
 
     # 登陆URL
     # __login_path = "https://auth.alipay.com/login/index.htm?loginScene=7&goto=https%3A%2F%2Fauth.alipay.com%2Flogin%2Ftaobao_trust_login.htm%3Ftarget%3Dhttps%253A%252F%252Flogin.taobao.com%252Fmember%252Falipay_sign_dispatcher.jhtml%253Ftg%253D&params=VFBMX3JlZGlyZWN0X3VybD0%3D"
-
-
     __login_path = "https://login.taobao.com/member/login.jhtml?spm=a21bo.2017.754894437.1.5af911d9nrX75I&f=top&redirectURL=https%3A%2F%2Fwww.taobao.com%2F"
     # 卖家待发货订单URL
     __orders_path = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend"
@@ -66,10 +64,26 @@ class TaobaoClimber:
             time.sleep(0.2)
         # time.sleep(10)
         self.driver.find_element_by_id("J-login-btn").click()
+	# records = self.getRecord(driver)
         time.sleep(2)
         return True
 
-
+#    def getRecord(self, driver):	
+#        html = driver.page_source	
+#        soup = BeautifulSoup(html, "lxml")	
+#        table = soup.find("table", id="tradeRecordsIndex")	
+#        records = []	
+#        if table:	
+#            trs = table.find_all("tr")	
+#            for tr in trs:	
+#                tds = tr.find_all("td")	
+#                created_at = tds[1].text	
+#                order = tds[2].text	
+#                money = tds[3].text	
+#                records.append({"time": created_at.replace("\n", ""), "order": order.replace("\n", ""),	
+#                                "money": money.replace("\n", "")})	
+#        return records
+#
     def climb(self):
         # 切换回窗口
         self.driver.switch_to_window(self.driver.window_handles[0])  # _homepage
