@@ -12,6 +12,11 @@ from mail.mail_sender import *
 from __init__ import *
 
 if __name__ == '__main__':
+    # 0.从本地文件读取账户信息
+    with open(account_info_file, 'r') as f:
+        lines = [l.strip('\n') for l in f.readlines()]
+    taobao_username = lines[0]
+    taobao_password = lines[1]
     # 1.给相关对象传入账号密码
     climber = TaobaoClimber(taobao_username, taobao_password)
     # downloader = CsdnDownloader(csdn_username, csdn_password)
