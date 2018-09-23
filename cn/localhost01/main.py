@@ -24,8 +24,8 @@ if __name__ == '__main__':
     sender_browser = MailSenderBrowser(mail_username, mail_password, mail_password2)
 
     # 2.实例化driver
-    driver = webdriver.Firefox()  # 将Firefox浏览器驱动放于python根目录下
-    # driver = webdriver.Chrome("D:\Python27\chromedriver.exe")  # 将Chrome驱动放于python根目录下或者直接给出Chrome驱动路径
+    # driver = webdriver.Firefox()  # 将Firefox浏览器驱动放于python根目录下
+    driver = webdriver.Chrome("D:\Python\chromedriver.exe")  # 将Chrome驱动放于python根目录下或者直接给出Chrome驱动路径
     action = ActionChains(driver)
     driver.maximize_window()  # 浏览器最大化
     driver.set_page_load_timeout(delay_wait)  # 设定页面加载限制时间
