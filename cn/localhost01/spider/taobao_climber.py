@@ -8,9 +8,14 @@ import re
 import requests
 import json
 import sys
+import requests
+from urllib2 import urlopen
 from bs4 import BeautifulSoup
+
 # from cn.localhost01.util.str_util import print_msg
 from util.str_util import print_msg
+
+
 
 # 对于py2，将ascii改为utf8
 reload(sys)
@@ -69,9 +74,11 @@ class TaobaoClimber:
 
     def __get_orders_page(self):
         # 1.bs4将资源转html
-        html = BeautifulSoup(self.driver.page_source, "html5lib")
+        # html = BeautifulSoup(self.driver.page_source, "html5lib")
+        html = urlopen(self.__orders_path)
+        bsObj = BeautifulSoup(html.read())
         # 2.取得所有的订单div
-        order_div_list = html.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
+        order_div_list = bsObj.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
         # 3.遍历每个订单div，获取数据
         data_array = []
         for index, order_div in enumerate(order_div_list):
@@ -90,10 +97,8 @@ class TaobaoClimber:
         result = []
         if self.__is_logined is False:
             if self.__login() is False:
-                print ("test10....")
-            # return result
+                return result
             else:
-                print("...is true")
                 self.__is_logined = True
         try:
             self.driver.get(self.__orders_path)
