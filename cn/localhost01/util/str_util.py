@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from cn.localhost01.mail.mail_sender import Mail
-from cn.localhost01.__init__ import master_mail
+# from cn.localhost01.mail.mail_sender import Mail
+
+from mail.mail_sender import Mail
+# from cn.localhost01.__init__ import master_mail
+# from .__init__ import master_mail
 import chardet
 import sys
 

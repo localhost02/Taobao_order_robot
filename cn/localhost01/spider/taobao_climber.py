@@ -9,6 +9,7 @@ import requests
 import json
 import sys
 import requests
+# from http import cookiejar
 from urllib2 import urlopen
 from bs4 import BeautifulSoup
 
@@ -27,18 +28,16 @@ class TaobaoClimber:
         self.__session = requests.Session()
         self.__username = username
         self.__password = password
-
+        # 用户信息
     driver = None
     action = None
-
     # 是否登录
     __is_logined = False
-
     # 登陆URL
-    # __login_path = "https://auth.alipay.com/login/index.htm?loginScene=7&goto=https%3A%2F%2Fauth.alipay.com%2Flogin%2Ftaobao_trust_login.htm%3Ftarget%3Dhttps%253A%252F%252Flogin.taobao.com%252Fmember%252Falipay_sign_dispatcher.jhtml%253Ftg%253D&params=VFBMX3JlZGlyZWN0X3VybD0%3D"
     __login_path = "https://login.taobao.com/member/login.jhtml?spm=a21bo.2017.754894437.1.5af911d9nrX75I&f=top&redirectURL=https%3A%2F%2Fwww.taobao.com%2F"
     # 卖家待发货订单URL
     __orders_path = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend"
+    orders_path = "https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend"
     # 卖家正出售宝贝URL
     __auction_path = "https://sell.taobao.com/auction/merchandise/auction_list.htm"
     # 卖家仓库中宝贝URL
@@ -60,7 +59,6 @@ class TaobaoClimber:
         self.driver.find_element_by_id("J_Quick2Static").click()
         self.driver.find_element_by_class_name("alipay-login").click()
         self.driver.find_element_by_xpath("//li[@data-status='show_login']").click()
-
         for username_ in self.__username:
             self.driver.find_element_by_id("J-input-user").send_keys(username_)
             time.sleep(0.2)
@@ -70,18 +68,38 @@ class TaobaoClimber:
         # time.sleep(10)
         self.driver.find_element_by_id("J-login-btn").click()
         time.sleep(2)
+        cookies = self.driver.get_cookies()  # 导出cookie
+        for cookie in cookies:
+            self.__session.cookies.set(cookie['name'], cookie['value'])  # 转换cookies
+        # self.driver.get("https://myseller.taobao.com/home.htm")
+        # self.driver.get("https://trade.taobao.com/trade/itemlist/list_sold_items.htm?action=itemlist/SoldQueryAction&event_submit_do_query=1&auctionStatus=PAID&tabCode=waitSend")
+        # self.driver.find_element_by_link_text("已卖出的宝贝").click()
+        time.sleep(2)
+        # html = BeautifulSoup(self.driver.page_source, "html5lib")
+        # order_div_list = html.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
+        # print order_div_list
         return True
 
     def __get_orders_page(self):
         # 1.bs4将资源转html
+        self.driver.get("https://myseller.taobao.com/home.htm")
+        self.driver.find_element_by_link_text("已卖出的宝贝").click()
+        self.driver.refresh
+        self.driver.switch_to_window(self.driver.window_handles[3])
+        # self.driver.get(__orders_path)
+        print self.driver.page_source
+        html = BeautifulSoup(self.driver.page_source, "html.parser")
         # html = BeautifulSoup(self.driver.page_source, "html5lib")
-        html = urlopen(self.__orders_path)
-        bsObj = BeautifulSoup(html.read())
+        print html
         # 2.取得所有的订单div
-        order_div_list = bsObj.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
+        # order_div_list = html.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
+        order_div_list = html.find_all("div", {"class": "item-mod__trade-order___2LnGB trade-order-main"})
+
         # 3.遍历每个订单div，获取数据
+        print order_div_list
         data_array = []
         for index, order_div in enumerate(order_div_list):
+            print index, order_div
             order_id = order_div.find("input", attrs={"name": "orderid"}).attrs["value"]
             order_date = order_div.find("span",
                                         attrs={"data-reactid": re.compile(r"\.0\.5\.3:.+\.0\.1\.0\.0\.0\.6")}).text
@@ -92,7 +110,10 @@ class TaobaoClimber:
         return data_array
 
     def climb(self):
+        self.__session = requests.Session()
         # 切换回窗口
+        headers = {
+            'User-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'}
         self.driver.switch_to_window(self.driver.window_handles[0])  # _homepage
         result = []
         if self.__is_logined is False:
@@ -100,14 +121,10 @@ class TaobaoClimber:
                 return result
             else:
                 self.__is_logined = True
-        try:
-            self.driver.get(self.__orders_path)
-        finally:
             while True:
                 # 2.获取当前页面的订单信息
                 time.sleep(2)  # 两秒等待页面加载
                 _orders = self.__get_orders_page()
-                result.extend(_orders)
                 try:
                     # 3.获取下一页按钮
                     next_page_li = self.driver.find_element_by_class_name("pagination-next")

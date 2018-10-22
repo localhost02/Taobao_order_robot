@@ -10,6 +10,8 @@ from spider.csdn_downloader import CsdnDownloader
 from mail.mail_sender_browser import MailSenderBrowser
 from mail.mail_sender import *
 from __init__ import *
+from bs4 import BeautifulSoup
+import requests
 
 if __name__ == '__main__':
     # 0.从本地文件读取账户信息
@@ -29,7 +31,6 @@ if __name__ == '__main__':
     action = ActionChains(driver)
     driver.maximize_window()  # 浏览器最大化
     driver.set_page_load_timeout(delay_wait)  # 设定页面加载限制时间
-
     TaobaoClimber.driver = CsdnDownloader.driver = MailSenderBrowser.driver = driver
     TaobaoClimber.action = CsdnDownloader.action = MailSenderBrowser.action = action
 
@@ -42,7 +43,8 @@ if __name__ == '__main__':
 
     # 正则：解析留言内容
     re_note = re.compile(
-        ur"^留言:\s*([\w.-]+@[\w.-]+\.\w+)[\s\S]+?((?:https?://)?[-A-Za-z0-9+&@#/%?=~_|!,.;]+[-A-Za-z0-9+&@#/%=~_|])\s*$")
+      ur"^留言:\s*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
+
     # 休眠总时间
     sleep_total_time = 0
     # 存在未留言订单

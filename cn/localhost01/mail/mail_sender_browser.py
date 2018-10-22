@@ -6,7 +6,8 @@ import time
 import sys
 import os
 import random
-from cn.localhost01.util.str_util import print_msg
+# from cn.localhost01.util.str_util import print_msg
+from util.str_util import print_msg
 
 reload(sys)
 sys.setdefaultencoding('utf8')  # 对于py2，将ascii改为utf8
