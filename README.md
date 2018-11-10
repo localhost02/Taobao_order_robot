@@ -2,7 +2,7 @@
 **帮你实现：淘宝虚拟商品的`自动值守`、`资源下载`、`Email发货`**
 
 ## 1、运作流程
-![](http://p27z4ahy7.bkt.clouddn.com/2018/08/22/cae0987deb860187d2cee8efaab0b7b5.png)
+![](https://raw.githubusercontent.com/localhost02/Taobao_order_robot/master/source/info.png)
 
 **Trip：**
 * 使用小附件方式发送邮件，大于50M文件可能发送失败（QQ邮箱通病）。文件已压缩为zip，再进行发送，这样文件更小，而且可规避某些邮箱服务器不允许直接发送exe文件
