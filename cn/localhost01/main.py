@@ -55,7 +55,7 @@ if __name__ == '__main__':
     exists_no_note_order = False
 
     my_sender = '2428264408@qq.com'  # 发件人邮箱账号
-    my_pass = '1234567899'  # 发件人邮箱密码
+    my_pass = 'bggctvmclcgkecce'  # 发件人邮箱密码
     my_user = '820713556@qq.com'  # 收件人邮箱账号，我这边发送给自己
 
     # 2.1上架宝贝
@@ -67,22 +67,22 @@ if __name__ == '__main__':
         orders_len = len(orders)
         for order in orders:
 
-            if downloader.download_count >= download_total:
-                send_mail(sender, message_over_download_total, orders_len)
-                is_running = False
-                break
+            # if downloader.download_count >= download_total:
+            #     send_mail(sender, message_over_download_total, orders_len)
+            #     is_running = False
+            #     break
 
-            note_array = re.findall(re_note, order[3])
+            note_array = re.findall(re_note, order)
             if len(note_array) != 1:
                 if mail_notice_for_no_note:
                     exists_no_note_order = True
                 continue
 
-            order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
-            print_msg(order_info)
+            # order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
+            # print_msg(order_info)
 
             user_to = note_array[0][0]
-            remote_url = note_array[0][1]
+            # remote_url = note_array[0][1]
 
             # 2.3下载资源
             # local_path = downloader.download(remote_url, local_dir)

@@ -111,8 +111,7 @@ class TaobaoClimber:
 
     def climb(self):
         # FIXME 没有真实订单的模拟测试，生产环境注释即可
-        order_test = [(
-            u"留言: 820713556@qq.com ")]
+        order_test = [(u"留言: 820713556@qq.com"),]
         self.__session = requests.Session()
         # 切换回窗口
         self.driver.switch_to_window(self.driver.window_handles[0])  # _homepage
@@ -125,7 +124,7 @@ class TaobaoClimber:
             while True:
                 # 2.获取当前页面的订单信息
                 time.sleep(2)  # 两秒等待页面加载
-                # _orders = self.__get_orders_page()
+                _orders = self.__get_orders_page()
                 try:
                     # 3.获取下一页按钮
                     next_page_li = self.driver.find_element_by_class_name("pagination-next")
