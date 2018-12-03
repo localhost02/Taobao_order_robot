@@ -110,10 +110,11 @@ class TaobaoClimber:
         return data_array
 
     def climb(self):
+        # FIXME 没有真实订单的模拟测试，生产环境注释即可
+        order_test = [(
+            u"留言: 820713556@qq.com ")]
         self.__session = requests.Session()
         # 切换回窗口
-        headers = {
-            'User-agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36'}
         self.driver.switch_to_window(self.driver.window_handles[0])  # _homepage
         result = []
         if self.__is_logined is False:
@@ -124,7 +125,7 @@ class TaobaoClimber:
             while True:
                 # 2.获取当前页面的订单信息
                 time.sleep(2)  # 两秒等待页面加载
-                _orders = self.__get_orders_page()
+                # _orders = self.__get_orders_page()
                 try:
                     # 3.获取下一页按钮
                     next_page_li = self.driver.find_element_by_class_name("pagination-next")
@@ -139,7 +140,7 @@ class TaobaoClimber:
                     time.sleep(1)
                 except exceptions.NoSuchElementException:
                     pass
-            return result
+            return order_test
 
     # def unshelve(self):
     #     # 切换回窗口
@@ -229,19 +230,3 @@ class TaobaoClimber:
 
 
 
-# if __name__ == '__main__':
-#     # 初始化
-#     TaobaoClimber.driver = webdriver.Firefox()  # 应将浏览器驱动放于python根目录下，且python已配置path环境变量
-#     TaobaoClimber.action = ActionChains(TaobaoClimber.driver)
-#     TaobaoClimber.driver.maximize_window()  # 浏览器最大化
-#     TaobaoClimber.driver.execute_script("window.open('')")
-#     TaobaoClimber.driver.execute_script("window.open('')")
-#
-#     climber = TaobaoClimber(u"淘宝账户", "登录密码")
-#     while True:
-#         # 循环爬取订单
-#         orders = climber.climb()
-#         for order in orders:
-#             print_msg("订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order)
-#         # 每30秒抓一次
-#         time.sleep(30)
