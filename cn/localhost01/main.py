@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     my_sender = '2428264408@qq.com'  # 发件人邮箱账号
     my_pass = 'bggctvmclcgkecce'  # 发件人邮箱密码
-    my_user = '820713556@qq.com'  # 收件人邮箱账号，我这边发送给自己
+    # my_user = '820713556@qq.com'  # 收件人邮箱账号，我这边发送给自己
 
     # 2.1上架宝贝
     # climber.shelve()
@@ -81,8 +81,9 @@ if __name__ == '__main__':
             # order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
             # print_msg(order_info)
 
-            user_to = note_array[0][0]
+            # user_to = note_array[0][0]
             # remote_url = note_array[0][1]
+            my_user = note_array  # 收件人邮箱账号，我这边发送给自己
 
             # 2.3下载资源
             # local_path = downloader.download(remote_url, local_dir)
@@ -115,7 +116,7 @@ if __name__ == '__main__':
             if mail_send_type == 2:
                 ret = True
                 try:
-                   msg = MIMEText('nihao', 'plain', 'utf-8')
+                   msg = MIMEText('test5', 'plain', 'utf-8')
                    msg['From'] = formataddr(["FromRunoob", my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
                    msg['To'] = formataddr(["FK", my_user])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
                    msg['Subject'] = "菜鸟教程发送邮件测试"  # 邮件的主题，也可以说是标题
