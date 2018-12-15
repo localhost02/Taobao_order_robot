@@ -64,6 +64,7 @@ if __name__ == '__main__':
     while is_running:
         # 2.2爬取订单
         orders = climber.climb()
+        print "orders[0][3]: ", orders[0][3]
         orders_len = len(orders)
         for order in orders:
 
@@ -71,48 +72,13 @@ if __name__ == '__main__':
             #     send_mail(sender, message_over_download_total, orders_len)
             #     is_running = False
             #     break
-
-            note_array = re.findall(re_note, order)
+            print "order: ", order
+            note_array = re.findall(re_note, order[3])
             if len(note_array) != 1:
                 if mail_notice_for_no_note:
                     exists_no_note_order = True
                 continue
-
-            # order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
-            # print_msg(order_info)
-
-            # user_to = note_array[0][0]
-            # remote_url = note_array[0][1]
             my_user = note_array  # 收件人邮箱账号，我这边发送给自己
-
-            # 2.3下载资源
-            # local_path = downloader.download(remote_url, local_dir)
-            # if local_path is None:
-            #     send_mail(sender, message_download_false, order[0])
-            #     continue
-            # else:
-            #     print_msg("【资源下载成功】本地路径：" + local_path)
-            # orders_len -= 1
-
-            # 2.4进行下架判断
-            # if downloader.download_count == download_total - 1:
-            #     if climber.unshelve() is False:
-            #         send_mail(sender, message_unshelve_false, downloader.download_count)
-
-            # 2.5 发送邮件
-            # if mail_send_type == 0:
-            #     download_url = server_file_url + os.path.basename(local_path)
-            #     if sender.send(Mail(user_to, download_url)):
-            #         print_msg("【邮件发送成功】")
-            #     else:
-            #         send_mail(sender, message_send_false, order[0])
-            #         continue
-            # elif mail_send_type == 1:
-            #     if sender.send(Mail(user_to, local_path, 2)):
-            #         print_msg("【邮件发送成功】")
-            #     else:
-            #         send_mail(sender, message_send_false, order[0])
-            #         continue
             if mail_send_type == 2:
                 ret = True
                 try:

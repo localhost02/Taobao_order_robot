@@ -111,7 +111,7 @@ class TaobaoClimber:
 
     def climb(self):
         # FIXME 没有真实订单的模拟测试，生产环境注释即可
-        order_test = [(u"留言: 820713556@qq.com"),]
+        # order_test = [(u"留言: 820713556@qq.com"),]
         self.__session = requests.Session()
         # 切换回窗口
         self.driver.switch_to_window(self.driver.window_handles[0])  # _homepage
@@ -139,7 +139,7 @@ class TaobaoClimber:
                     time.sleep(1)
                 except exceptions.NoSuchElementException:
                     pass
-            return order_test
+            return _orders
 
     # def unshelve(self):
     #     # 切换回窗口
