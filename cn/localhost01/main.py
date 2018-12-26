@@ -10,6 +10,12 @@ from spider.csdn_downloader import CsdnDownloader
 from mail.mail_sender_browser import MailSenderBrowser
 from mail.mail_sender import *
 from __init__ import *
+from bs4 import BeautifulSoup
+import requests
+
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formataddr
 
 if __name__ == '__main__':
     # 0.从本地文件读取账户信息
@@ -29,7 +35,6 @@ if __name__ == '__main__':
     action = ActionChains(driver)
     driver.maximize_window()  # 浏览器最大化
     driver.set_page_load_timeout(delay_wait)  # 设定页面加载限制时间
-
     TaobaoClimber.driver = CsdnDownloader.driver = MailSenderBrowser.driver = driver
     TaobaoClimber.action = CsdnDownloader.action = MailSenderBrowser.action = action
 
@@ -42,11 +47,17 @@ if __name__ == '__main__':
 
     # 正则：解析留言内容
     re_note = re.compile(
-        ur"^留言:[\u3000\u0020]*([\w.-]+@[\w.-]+\.\w+)[\s\S]+?((?:https?://)?[-A-Za-z0-9+&@#/%?=~_|!,.;]+[-A-Za-z0-9+&@#/%=~_|])\s*$")
+      ur"^留言:[\u3000\u0020]*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
+#      ur"^留言:\s*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
+
     # 休眠总时间
     sleep_total_time = 0
     # 存在未留言订单
     exists_no_note_order = False
+
+    my_sender = '2428264408@qq.com'  # 发件人邮箱账号
+    my_pass = 'bggctvmclcgkecce'  # 发件人邮箱密码
+    # my_user = '820713556@qq.com'  # 收件人邮箱账号，我这边发送给自己
 
     # 2.1上架宝贝
     # climber.shelve()
@@ -54,63 +65,36 @@ if __name__ == '__main__':
     while is_running:
         # 2.2爬取订单
         orders = climber.climb()
+        print "orders[0][3]: ", orders[0][3]
         orders_len = len(orders)
         for order in orders:
 
-            if downloader.download_count >= download_total:
-                send_mail(sender, message_over_download_total, orders_len)
-                is_running = False
-                break
-
+            # if downloader.download_count >= download_total:
+            #     send_mail(sender, message_over_download_total, orders_len)
+            #     is_running = False
+            #     break
+            print "order: ", order
             note_array = re.findall(re_note, order[3])
             if len(note_array) != 1:
                 if mail_notice_for_no_note:
                     exists_no_note_order = True
                 continue
+            my_user = note_array  # 收件人邮箱账号，我这边发送给自己
+            if mail_send_type == 2:
+                ret = True
+                try:
+                   msg = MIMEText('test5', 'plain', 'utf-8')
+                   msg['From'] = formataddr(["FromRunoob", my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+                   msg['To'] = formataddr(["FK", my_user])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+                   msg['Subject'] = "菜鸟教程发送邮件测试"  # 邮件的主题，也可以说是标题
 
-            order_info = "【已产生可操作订单】订单号：%s\t订单日期：%s \t买家：%s\t备注：%s" % order
-            print_msg(order_info)
-
-            user_to = note_array[0][0]
-            remote_url = note_array[0][1]
-
-            # 2.3下载资源
-            local_path = downloader.download(remote_url, local_dir)
-            if local_path is None:
-                send_mail(sender, message_download_false, order[0])
-                continue
-            else:
-                print_msg("【资源下载成功】本地路径：" + local_path)
-            orders_len -= 1
-
-            # 2.4进行下架判断
-            if downloader.download_count == download_total - 1:
-                if climber.unshelve() is False:
-                    send_mail(sender, message_unshelve_false, downloader.download_count)
-
-            # 2.5 发送邮件
-            if mail_send_type == 0:
-                download_url = server_file_url + os.path.basename(local_path)
-                if sender.send(Mail(user_to, download_url)):
-                    print_msg("【邮件发送成功】")
-                else:
-                    send_mail(sender, message_send_false, order[0])
-                    continue
-            elif mail_send_type == 1:
-                if sender.send(Mail(user_to, local_path, 2)):
-                    print_msg("【邮件发送成功】")
-                else:
-                    send_mail(sender, message_send_false, order[0])
-                    continue
-            else:
-                ret = sender_browser.send(user_to, local_path)
-
-                if ret is None:
-                    print_msg("【浏览器方式：邮件发送成功】")
-                else:  # 发送失败
-                    send_mail(sender, message_send_mail_error, order[0], ret)
-                    continue
-
+                   server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
+                   server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱密码
+                   server.sendmail(my_sender, [my_user, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
+                   server.quit()  # 关闭连接
+                except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
+                   ret = False
+                   print_msg("try：" + ret)
             # 2.6 订单改为已发货
             if climber.delivered(order[0]) is False:
                 send_mail(sender, message_delivered_false, order[0])
@@ -125,3 +109,12 @@ if __name__ == '__main__':
                 send_mail(sender, message_notice_for_no_note)
                 exists_no_note_order = False
             sleep_total_time = 0
+
+
+
+
+
+
+
+
+
