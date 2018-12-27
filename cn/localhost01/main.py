@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
+
 import time
 from selenium import webdriver
 from selenium.webdriver import ActionChains
-
 import  urllib2
 from util.str_util import print_msg, send_mail
 from spider.taobao_climber import TaobaoClimber
@@ -47,8 +47,7 @@ if __name__ == '__main__':
 
     # 正则：解析留言内容
     re_note = re.compile(
-      ur"^留言:[\u3000\u0020]*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
-#      ur"^留言:\s*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
+        ur"^留言:[\u3000\u0020]*([\w.-]+@[\w.-]+\.\w+)\s*$")  # 格式; 留言： +任意空格+邮箱
 
     # 休眠总时间
     sleep_total_time = 0
@@ -68,12 +67,10 @@ if __name__ == '__main__':
         print "orders[0][3]: ", orders[0][3]
         orders_len = len(orders)
         for order in orders:
-
-            # if downloader.download_count >= download_total:
-            #     send_mail(sender, message_over_download_total, orders_len)
-            #     is_running = False
-            #     break
             print "order: ", order
+            if climber.deliver_judge(order[0]) is False:
+                print "这个订单已经发货"
+                continue
             note_array = re.findall(re_note, order[3])
             if len(note_array) != 1:
                 if mail_notice_for_no_note:
@@ -94,27 +91,9 @@ if __name__ == '__main__':
                    server.quit()  # 关闭连接
                 except Exception:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
                    ret = False
-                   print_msg("try：" + ret)
-            # 2.6 订单改为已发货
-            if climber.delivered(order[0]) is False:
-                send_mail(sender, message_delivered_false, order[0])
-
-        time.sleep(check_order_period)  # 每指定时间抓一次
-        sleep_total_time += check_order_period
-
-        if sleep_total_time >= check_refunding_period:  # 每指定时间检查一次退款和未留言订单
-            if climber.exists_refunding():
-                send_mail(sender, message_exists_refunding)
-            if exists_no_note_order:
-                send_mail(sender, message_notice_for_no_note)
-                exists_no_note_order = False
-            sleep_total_time = 0
-
-
-
-
-
-
-
-
-
+                # 2.6 订单改为已发货
+                if climber.delivered(order[0]) is True:
+                    print "更改这个订单为已经发货"
+                else:
+                    print "更改该订单发货状态失败"
+    time.sleep(5)
